@@ -63,7 +63,6 @@ func createAccount(c *gin.Context) {
 	}
 
 	request := BasicAuth(http.MethodPost, "", postBody)
-	request.Body.Close()
 
 	request.Header.Add("Content-Type", "application/json")
 	response, err := client.Do(request)
@@ -72,7 +71,7 @@ func createAccount(c *gin.Context) {
 		return
 	}
 	defer response.Body.Close()
-	
+
 	c.JSON(200, gin.H{"message":"Successfully created"})
 }
 
