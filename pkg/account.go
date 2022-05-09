@@ -18,7 +18,7 @@ func getAccount(c *gin.Context) {
 	request := BasicAuth(http.MethodGet, "", nil)
 	response, err := client.Do(request)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Errorf("Error during request", err)
 		return
 	}
 
@@ -27,8 +27,8 @@ func getAccount(c *gin.Context) {
 	// var responseObject interface{} // Выдача данных как в документаций мойСлад
 	var responseObject map[string][]map[string]string // только данные аккаунтов
 	error := json.NewDecoder(resBody).Decode(&responseObject)
-	if error == nil {
-		logrus.Fatal(err)
+	if error != nil {
+		logrus.Errorf("Cannot unmarshal object",error)
 	}
 	c.JSON(200, responseObject)
 }
@@ -42,10 +42,10 @@ func deleteAccount(c *gin.Context) {
 
 	response, err := client.Do(req)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Errorf("Error during request", err)
 		return
 	}
-	response.Body.Close()
+	defer response.Body.Close()
 	c.JSON(200, gin.H{"message":"Successfully deleted"})
 }
 
@@ -58,7 +58,7 @@ func createAccount(c *gin.Context) {
 
 	postBody, err := json.Marshal(account)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Errorf("Error: ", err)
 		return
 	}
 
@@ -68,10 +68,11 @@ func createAccount(c *gin.Context) {
 	request.Header.Add("Content-Type", "application/json")
 	response, err := client.Do(request)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Errorf("Error: ", err)
 		return
 	}
-	response.Body.Close()
+	defer response.Body.Close()
+	
 	c.JSON(200, gin.H{"message":"Successfully created"})
 }
 
@@ -84,7 +85,7 @@ func updateAccount(c *gin.Context) {
 
 	updateBody, err := json.Marshal(account)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Errorf("Error: ", err)
 		return
 	}
 
@@ -94,7 +95,7 @@ func updateAccount(c *gin.Context) {
 
 	response, err := client.Do(request)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Errorf("Error: ", err)
 		return
 	}
 	
@@ -107,11 +108,11 @@ func BasicAuth(method, id string, body []uint8) *http.Request {
 	bodyPost := bytes.NewBuffer(body)
 	request, err := http.NewRequest(method, "https://online.moysklad.ru/api/remap/1.2/entity/employee/" + id, bodyPost)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Errorf("Error: ", err)
 	}
 	err = godotenv.Load()
 	if err != nil {
-		logrus.Fatal("Error loading .env file")
+		logrus.Errorf("Error loading .env file ", err)
 	}
 	request.SetBasicAuth(os.Getenv("authLogin"), os.Getenv("authPassword"))
 	defer request.Body.Close()
