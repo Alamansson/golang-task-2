@@ -1,12 +1,13 @@
 package pkg
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
 	"os"
 	"time"
-	"bytes"
+
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -19,7 +20,7 @@ func getAccount(c *gin.Context) {
 	response, err := client.Do(request)
 	if err != nil {
 		logrus.Errorf("Error during request", err)
-		return
+		return 
 	}
 
 	resBody := io.Reader(response.Body)
@@ -29,8 +30,10 @@ func getAccount(c *gin.Context) {
 	error := json.NewDecoder(resBody).Decode(&responseObject)
 	if error != nil {
 		logrus.Errorf("Cannot unmarshal object",error)
+		return 
 	}
 	c.JSON(200, responseObject)
+	return 
 }
 
 
@@ -43,7 +46,7 @@ func deleteAccount(c *gin.Context) {
 	response, err := client.Do(req)
 	if err != nil {
 		logrus.Errorf("Error during request", err)
-		return
+		return 
 	}
 	defer response.Body.Close()
 	c.JSON(200, gin.H{"message":"Successfully deleted"})
@@ -58,8 +61,8 @@ func createAccount(c *gin.Context) {
 
 	postBody, err := json.Marshal(account)
 	if err != nil {
-		logrus.Errorf("Error: ", err)
-		return
+		logrus.Errorf("Error return: ", err)
+		return 
 	}
 
 	request := BasicAuth(http.MethodPost, "", postBody)
@@ -67,8 +70,8 @@ func createAccount(c *gin.Context) {
 	request.Header.Add("Content-Type", "application/json")
 	response, err := client.Do(request)
 	if err != nil {
-		logrus.Errorf("Error: ", err)
-		return
+		logrus.Errorf("Error return: ", err)
+		return 
 	}
 	defer response.Body.Close()
 
@@ -84,8 +87,8 @@ func updateAccount(c *gin.Context) {
 
 	updateBody, err := json.Marshal(account)
 	if err != nil {
-		logrus.Errorf("Error: ", err)
-		return
+		logrus.Errorf("Error return: ", err)
+		return 
 	}
 
 	request := BasicAuth(http.MethodPut, id, updateBody)
@@ -94,8 +97,8 @@ func updateAccount(c *gin.Context) {
 
 	response, err := client.Do(request)
 	if err != nil {
-		logrus.Errorf("Error: ", err)
-		return
+		logrus.Errorf("Error return: ", err)
+		return 
 	}
 	
 	response.Body.Close()
@@ -107,11 +110,13 @@ func BasicAuth(method, id string, body []uint8) *http.Request {
 	bodyPost := bytes.NewBuffer(body)
 	request, err := http.NewRequest(method, "https://online.moysklad.ru/api/remap/1.2/entity/employee/" + id, bodyPost)
 	if err != nil {
-		logrus.Errorf("Error: ", err)
+		logrus.Errorf("Error return: ", err)
+		return nil 
 	}
 	err = godotenv.Load()
 	if err != nil {
 		logrus.Errorf("Error loading .env file ", err)
+		return nil 
 	}
 	request.SetBasicAuth(os.Getenv("authLogin"), os.Getenv("authPassword"))
 	defer request.Body.Close()
